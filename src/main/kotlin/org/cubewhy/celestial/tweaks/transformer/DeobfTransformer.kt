@@ -5,12 +5,12 @@ import org.objectweb.asm.commons.Remapper
 import org.objectweb.asm.tree.ClassNode
 
 class DeobfTransformer(private val remapper: Remapper) : NodeTransformer() {
-    override fun transform(cn: ClassNode): Boolean {
-//        if (!cn.name.startsWith("com/moonsworth/lunar/client")) return false
-        println(cn.name)
+    override fun transform(cn: ClassNode): ClassNode {
         // load mapping
-        val classRemapper = ClassRemapper(cn, remapper)
+        val newNode = ClassNode()
+        val classRemapper = ClassRemapper(newNode, remapper)
+
         cn.accept(classRemapper)
-        return true
+        return newNode
     }
 }

@@ -7,9 +7,11 @@ import java.lang.instrument.ClassFileTransformer
 import java.security.ProtectionDomain
 
 abstract class NodeTransformer : ClassFileTransformer {
+
     override fun transform(
-        loader: ClassLoader?,
-        className: String?,
+        module: Module,
+        loader: ClassLoader,
+        className: String,
         classBeingRedefined: Class<*>?,
         protectionDomain: ProtectionDomain?,
         classfileBuffer: ByteArray?
@@ -19,14 +21,15 @@ abstract class NodeTransformer : ClassFileTransformer {
         val classNode = ClassNode()
         reader.accept(classNode, 0)
         // transform
-        if (this.transform(classNode)) {
-            // apply bytecode
+        val newCn = this.transform(classNode)
+        if (newCn != null) {
+            // apply changes
             val writer = ClassWriter(ClassWriter.COMPUTE_MAXS or ClassWriter.COMPUTE_FRAMES)
-            classNode.accept(writer)
+            newCn.accept(writer)
             return writer.toByteArray()
         }
         return null // nothing changed
     }
 
-    abstract fun transform(cn: ClassNode): Boolean
+    abstract fun transform(cn: ClassNode): ClassNode?
 }

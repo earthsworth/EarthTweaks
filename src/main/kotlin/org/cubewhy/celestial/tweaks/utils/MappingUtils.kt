@@ -16,26 +16,39 @@ object MappingUtils {
     }
 }
 
-fun createRelocationRemapper(mappings: MappingTree,toNamespace: String = "named"): Remapper {
+fun createRelocationRemapper(mappings: MappingTree, toNamespace: String = "named"): Remapper {
+    val namespace = mappings.getNamespaceId(toNamespace)
     return object : Remapper() {
         override fun map(name: String): String {
-//            println("[Celestial] DEBUG: map class: $name")
-            val mappedClass = mappings.getClass(name.replace('.', '/'))
-            return mappedClass?.getName(mappings.getNamespaceId(toNamespace))?.replace('/', '.') ?: name
+            val mappedClass = mappings.mapClassName(name.replace('.', '/'), namespace)
+            if (mappedClass != name) {
+                println("[Celestial] Map class: $name -> $mappedClass")
+            }
+            return mappedClass
         }
 
         override fun mapMethodName(owner: String, name: String, descriptor: String): String {
-//            println("[Celestial] DEBUG: map method: $owner $name$descriptor")
-            val mappedClass = mappings.getClass(owner.replace('.', '/')) ?: return name
-            val mappedMethod = mappedClass.getMethod(name, descriptor)
-            return mappedMethod?.getName(mappings.getNamespaceId(toNamespace)) ?: name
+            val mappedClass = mappings.mapClassName(name.replace('.', '/'), namespace) ?: return name
+            val mappedMethod = mappings.getClass(mappedClass, namespace)!!.getMethod(name, descriptor)
+            val result = mappedMethod?.getName(namespace) ?: name
+            if (result != name) {
+                println("[Celestial] Map method: $mappedClass $name$descriptor -> $result$descriptor")
+            } else {
+                println("[Celestial] Map method: $mappedClass $result$descriptor (unmodified)")
+            }
+            return result
         }
 
         override fun mapFieldName(owner: String, name: String, descriptor: String): String {
-//            println("[Celestial] DEBUG: map field: $owner $name$descriptor")
-            val mappedClass = mappings.getClass(owner.replace('.', '/')) ?: return name
-            val mappedField = mappedClass.getField(name, descriptor)
-            return mappedField?.getName(mappings.getNamespaceId(toNamespace)) ?: name
+            val mappedClass = mappings.mapClassName(name.replace('.', '/'), namespace) ?: return name
+            val mappedField = mappings.getClass(mappedClass, namespace)!!.getField(name, descriptor)
+            val result = mappedField?.getName(mappings.getNamespaceId(toNamespace)) ?: name
+            if (result != name) {
+                println("[Celestial] Map field: $mappedClass $name$descriptor -> $result$descriptor")
+            } else {
+                println("[Celestial] Map field: $mappedClass $result$descriptor (unmodified)")
+            }
+            return result
         }
     }
 }

@@ -13,12 +13,12 @@ object Agent {
         System.setProperty("ichor.prebakeClasses", "false")
         // todo download mappings from mappings.lunarclient.top
         // load mappings
-        val stream = Agent::class.java.getResourceAsStream("/mappings.tiny")
+        val stream = Agent::class.java.getResourceAsStream("/full-mapping-250330-1809.tiny")
             ?: throw NullPointerException("Could not load mappings")
         // read mappings
         val mappings = MappingUtils.loadTinyV2(stream)
         val remapper = createRelocationRemapper(mappings)
-//        println("[Celestial] Deobfuscating LunarClient...")
+        println("[Celestial] Deobfuscating LunarClient...")
         inst.addTransformer(DeobfTransformer(remapper), true)
     }
 }
